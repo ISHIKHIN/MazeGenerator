@@ -65,7 +65,6 @@ cd build
 ./MazeGenerator.exe
 
 # Пример запуска
-![img.png](img%2Fimg.png)
 
 
 
