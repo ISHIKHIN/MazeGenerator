@@ -6,7 +6,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 
-# Попробуем найти Qt6, если не получится - используем Qt5
 find_package(Qt6 QUIET COMPONENTS Widgets)
 if(NOT Qt6_FOUND)
     find_package(Qt5 REQUIRED COMPONENTS Widgets)

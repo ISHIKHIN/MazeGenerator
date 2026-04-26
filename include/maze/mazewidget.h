@@ -46,4 +46,4 @@ private:
     QSize lastAvailableSize;
 };
 
-#endif // MAZEWIDGET_H
+#endif

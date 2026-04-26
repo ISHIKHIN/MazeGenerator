@@ -41,7 +41,6 @@ private:
     void setupConnections();
     void updateMazeWidgetSize();
 
-    // ==================== UI КОМПОНЕНТЫ ====================
     MazeWidget *mazeWidget;
     QScrollArea *scrollArea;
     QComboBox *algoBox;
@@ -56,16 +55,12 @@ private:
     QCheckBox *animatePath;
     QLabel *statusLabel;
 
-    // ==================== ДАННЫЕ ====================
     std::vector<std::vector<bool>> currentMaze;
     std::vector<std::pair<int, int>> currentPath;
     GeneratorSettings settings;
 
-    // ==================== ПАТТЕРН "СТРАТЕГИЯ" ====================
-    // Указатели на интерфейсы стратегий (полиморфное поведение)
-    std::unique_ptr<IMazeGenerator> mazeGenerator;  // Текущая стратегия генерации
-    std::unique_ptr<IPathFinder> pathFinder;        // Текущая стратегия поиска пути
-    // =============================================================
+    std::unique_ptr<IMazeGenerator> mazeGenerator;
+    std::unique_ptr<IPathFinder> pathFinder;
 };
 
-#endif // MAINWINDOW_H
+#endif
