@@ -65,7 +65,10 @@ cd build
 ./MazeGenerator.exe
 
 # Пример запуска
+![img](images/img.png)
 
+# Визуализация пути решения (можно выбрать анимацию для показа пути)
+![img](images/img1.png)
 
 
 

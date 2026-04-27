@@ -1,4 +1,4 @@
-#include "maze/mazewidget.h"
+#include "mazewidget.h"
 #include <QPainter>
 #include <QResizeEvent>
 #include <QTimer>

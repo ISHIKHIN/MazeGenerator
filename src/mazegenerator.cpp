@@ -1,4 +1,4 @@
-#include "maze/mazegenerator.h"
+#include "mazegenerator.h"
 #include <stack>
 #include <random>
 #include <algorithm>

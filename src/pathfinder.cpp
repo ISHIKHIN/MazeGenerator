@@ -1,4 +1,4 @@
-#include "maze/pathfinder.h"
+#include "pathfinder.h"
 #include <queue>
 #include <algorithm>
 #include <cmath>

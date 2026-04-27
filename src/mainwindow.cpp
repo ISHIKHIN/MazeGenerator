@@ -1,5 +1,5 @@
-#include "maze/mainwindow.h"
-#include "maze/mazewidget.h"
+#include "mainwindow.h"
+#include "mazewidget.h"
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QGroupBox>
