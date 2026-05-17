@@ -55,11 +55,18 @@ cmake -S . -B build -G "MinGW Makefiles" ^
     -DCMAKE_C_COMPILER="C:/Qt/Tools/mingw1120_64/bin/gcc.exe" ^
     -DCMAKE_CXX_COMPILER="C:/Qt/Tools/mingw1120_64/bin/g++.exe" ^
     -DCMAKE_MAKE_PROGRAM="C:/Qt/Tools/mingw1120_64/bin/mingw32-make.exe" ^
-    -DCMAKE_PREFIX_PATH="C:/Qt/6.11.0/mingw_64"
+    -DCMAKE_PREFIX_PATH="C:/Qt/6.11.0/mingw_64" -DBUILD_TESTS=ON
 
 # Сборка проекта
 cmake --build build
 
+# Запуск приложения
+cd build
+./MazeGenerator.exe
+
+# Запуск тестов
+cd build
+ctest --verbose
 # Запуск приложения
 cd build
 ./MazeGenerator.exe
