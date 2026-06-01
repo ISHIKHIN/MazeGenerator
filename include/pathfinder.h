@@ -24,7 +24,7 @@ public:
         std::pair<int, int> start,
         std::pair<int, int> end) override;
 
-    QString name() const override { return "BFS (Поиск в ширину)"; }
+    QString name() const override;  // только объявление, без реализации
 };
 
 class AStarFinder : public IPathFinder {
@@ -34,7 +34,7 @@ public:
         std::pair<int, int> start,
         std::pair<int, int> end) override;
 
-    QString name() const override { return "A* (Звездочка)"; }
+    QString name() const override;  // только объявление, без реализации
 };
 
 #endif

@@ -1,0 +1,74 @@
+services:
+  # Запуск всех тестов (с выводом результатов, но без остановки)
+  tests:
+    build:
+      context: .
+      target: builder
+    environment:
+      - QT_QPA_PLATFORM=minimal
+    command: >
+      sh -c "
+        cd /build/build &&
+        echo '==========================================' &&
+        echo 'ЗАПУСК UNIT-ТЕСТОВ' &&
+        echo '==========================================' &&
+        (xvfb-run -a ./test_difficultysettings && echo '✓ test_difficultysettings PASSED' || echo '✗ test_difficultysettings FAILED') &&
+        (xvfb-run -a ./test_mazegenerator && echo '✓ test_mazegenerator PASSED' || echo '✗ test_mazegenerator FAILED') &&
+        (xvfb-run -a ./test_pathfinder && echo '✓ test_pathfinder PASSED' || echo '✗ test_pathfinder FAILED') &&
+        (xvfb-run -a ./test_mainwindow && echo '✓ test_mainwindow PASSED' || echo '✗ test_mainwindow FAILED') &&
+        (xvfb-run -a ./test_mazewidget && echo '✓ test_mazewidget PASSED' || echo '✗ test_mazewidget FAILED') &&
+        echo '' &&
+        echo '==========================================' &&
+        echo 'ЗАПУСК СЦЕНАРИЕВ' &&
+        echo '==========================================' &&
+        (./scenario_full_generation && echo '✓ scenario_full_generation PASSED' || echo '✗ scenario_full_generation FAILED') &&
+        (./scenario_path_search && echo '✓ scenario_path_search PASSED' || echo '✗ scenario_path_search FAILED') &&
+        (./scenario_difficulty_switch && echo '✓ scenario_difficulty_switch PASSED' || echo '✗ scenario_difficulty_switch FAILED') &&
+        (./scenario_large_maze && echo '✓ scenario_large_maze PASSED' || echo '✗ scenario_large_maze FAILED') &&
+        echo '' &&
+        echo '==========================================' &&
+        echo 'ТЕСТИРОВАНИЕ ЗАВЕРШЕНО' &&
+        echo '=========================================='
+      "
+    restart: "no"
+
+  # Только unit-тесты
+  unit-tests:
+    build:
+      context: .
+      target: builder
+    environment:
+      - QT_QPA_PLATFORM=minimal
+    command: >
+      sh -c "
+        cd /build/build &&
+        echo '==========================================' &&
+        echo 'UNIT-ТЕСТЫ' &&
+        echo '==========================================' &&
+        xvfb-run -a ./test_difficultysettings &&
+        xvfb-run -a ./test_mazegenerator &&
+        xvfb-run -a ./test_pathfinder &&
+        xvfb-run -a ./test_mainwindow &&
+        xvfb-run -a ./test_mazewidget &&
+        echo '==========================================' &&
+        echo 'ВСЕ UNIT-ТЕСТЫ ПРОЙДЕНЫ' &&
+        echo '=========================================='
+      "
+    restart: "no"
+
+  # GUI приложение
+  app:
+    build: .
+    image: maze-generator:latest
+    container_name: maze-generator-app
+    environment:
+      - DISPLAY=${DISPLAY}
+      - QT_QPA_PLATFORM=xcb
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      - ${XAUTHORITY:-$HOME/.Xauthority}:/root/.Xauthority:ro
+    network_mode: host
+    command: ["/usr/local/bin/MazeGenerator"]
+    stdin_open: true
+    tty: true
+    restart: "no"

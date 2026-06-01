@@ -3,33 +3,34 @@
 #include <algorithm>
 #include <cmath>
 #include <unordered_map>
-
-struct AStarNode {
-    int x, y;
-    int g;
-    int h;
-    AStarNode* parent;
-
-    AStarNode(int x_, int y_) : x(x_), y(y_), g(0), h(0), parent(nullptr) {}
-
-    int f() const { return g + h; }
-
-    bool operator>(const AStarNode& other) const {
-        return f() > other.f();
-    }
-};
-
-static int heuristic(int x1, int y1, int x2, int y2) {
-    return std::abs(x1 - x2) + std::abs(y1 - y2);
-}
+#include <vector>
+#include <limits>
 
 std::vector<std::pair<int, int>> BFSFinder::findPath(
     const std::vector<std::vector<bool>>& maze,
     std::pair<int, int> start,
     std::pair<int, int> end)
 {
+    if (maze.empty() || maze[0].empty()) return {};
+
     int rows = (int)maze.size();
     int cols = (int)maze[0].size();
+
+    // Проверка границ
+    if (start.first < 0 || start.first >= cols || start.second < 0 || start.second >= rows ||
+        end.first < 0 || end.first >= cols || end.second < 0 || end.second >= rows) {
+        return {};
+    }
+
+    // Если старт или финиш - стена
+    if (maze[start.second][start.first] || maze[end.second][end.first]) {
+        return {};
+    }
+
+    // Если старт = финиш
+    if (start == end) {
+        return {start};
+    }
 
     std::vector<std::vector<bool>> visited(rows, std::vector<bool>(cols, false));
     std::vector<std::vector<std::pair<int, int>>> parent(
@@ -42,11 +43,14 @@ std::vector<std::pair<int, int>> BFSFinder::findPath(
     const int dx[] = {1, -1, 0, 0};
     const int dy[] = {0, 0, 1, -1};
 
-    while (!q.empty()) {
+    bool found = false;
+
+    while (!q.empty() && !found) {
         auto [x, y] = q.front();
         q.pop();
 
         if (std::make_pair(x, y) == end) {
+            found = true;
             break;
         }
 
@@ -64,18 +68,22 @@ std::vector<std::pair<int, int>> BFSFinder::findPath(
         }
     }
 
+    if (!found) {
+        return {};
+    }
+
     std::vector<std::pair<int, int>> path;
     auto cur = end;
 
-    while (cur != start && cur != std::make_pair(-1, -1)) {
+    while (cur != start) {
         path.push_back(cur);
         cur = parent[cur.second][cur.first];
+        if (cur.first == -1 && cur.second == -1) {
+            return {};
+        }
     }
 
-    if (cur == start) {
-        path.push_back(start);
-    }
-
+    path.push_back(start);
     std::reverse(path.begin(), path.end());
     return path;
 }
@@ -85,81 +93,104 @@ std::vector<std::pair<int, int>> AStarFinder::findPath(
     std::pair<int, int> start,
     std::pair<int, int> end)
 {
+    if (maze.empty() || maze[0].empty()) return {};
+
     int rows = (int)maze.size();
     int cols = (int)maze[0].size();
 
-    auto cmp = [](AStarNode* a, AStarNode* b) {
-        return a->f() > b->f();
+    if (start.first < 0 || start.first >= cols || start.second < 0 || start.second >= rows ||
+        end.first < 0 || end.first >= cols || end.second < 0 || end.second >= rows) {
+        return {};
+    }
+
+    if (maze[start.second][start.first] || maze[end.second][end.first]) {
+        return {};
+    }
+
+    if (start == end) {
+        return {start};
+    }
+
+    auto heuristic = [](int x1, int y1, int x2, int y2) {
+        return std::abs(x1 - x2) + std::abs(y1 - y2);
     };
-    std::priority_queue<AStarNode*, std::vector<AStarNode*>, decltype(cmp)> openSet(cmp);
 
-    std::vector<std::vector<bool>> closedSet(rows, std::vector<bool>(cols, false));
+    using Node = std::tuple<int, int, int, int>; // f, g, x, y
+    auto cmp = [](const Node& a, const Node& b) {
+        return std::get<0>(a) > std::get<0>(b);
+    };
+    std::priority_queue<Node, std::vector<Node>, decltype(cmp)> openSet(cmp);
 
-    std::vector<std::vector<AStarNode*>> nodes(rows, std::vector<AStarNode*>(cols, nullptr));
+    std::vector<std::vector<int>> gScore(rows, std::vector<int>(cols, std::numeric_limits<int>::max()));
+    std::vector<std::vector<int>> fScore(rows, std::vector<int>(cols, std::numeric_limits<int>::max()));
+    std::vector<std::vector<std::pair<int, int>>> parent(
+        rows, std::vector<std::pair<int, int>>(cols, {-1, -1}));
 
-    AStarNode* startNode = new AStarNode(start.first, start.second);
-    startNode->g = 0;
-    startNode->h = heuristic(start.first, start.second, end.first, end.second);
-    startNode->parent = nullptr;
-
-    openSet.push(startNode);
-    nodes[start.second][start.first] = startNode;
+    gScore[start.second][start.first] = 0;
+    fScore[start.second][start.first] = heuristic(start.first, start.second, end.first, end.second);
+    openSet.push({fScore[start.second][start.first], gScore[start.second][start.first], start.first, start.second});
 
     const int dx[] = {1, -1, 0, 0};
     const int dy[] = {0, 0, 1, -1};
 
-    AStarNode* endNode = nullptr;
+    bool found = false;
 
-    while (!openSet.empty()) {
-        AStarNode* current = openSet.top();
+    while (!openSet.empty() && !found) {
+        auto [current_f, current_g, x, y] = openSet.top();
         openSet.pop();
 
-        if (closedSet[current->y][current->x]) {
+        if (current_f > fScore[y][x]) {
             continue;
         }
-        closedSet[current->y][current->x] = true;
 
-        if (current->x == end.first && current->y == end.second) {
-            endNode = current;
+        if (x == end.first && y == end.second) {
+            found = true;
             break;
         }
 
         for (int i = 0; i < 4; ++i) {
-            int nx = current->x + dx[i];
-            int ny = current->y + dy[i];
+            int nx = x + dx[i];
+            int ny = y + dy[i];
 
-            if (nx >= 0 && ny >= 0 && nx < cols && ny < rows &&
-                !maze[ny][nx] && !closedSet[ny][nx])
-            {
-                int tentative_g = current->g + 1;
+            if (nx >= 0 && ny >= 0 && nx < cols && ny < rows && !maze[ny][nx]) {
+                int tentative_g = gScore[y][x] + 1;
 
-                if (nodes[ny][nx] == nullptr) {
-                    nodes[ny][nx] = new AStarNode(nx, ny);
-                }
-
-                AStarNode* neighbor = nodes[ny][nx];
-
-                if (tentative_g < neighbor->g) {
-                    neighbor->parent = current;
-                    neighbor->g = tentative_g;
-                    neighbor->h = heuristic(nx, ny, end.first, end.second);
-                    openSet.push(neighbor);
+                if (tentative_g < gScore[ny][nx]) {
+                    parent[ny][nx] = {x, y};
+                    gScore[ny][nx] = tentative_g;
+                    fScore[ny][nx] = tentative_g + heuristic(nx, ny, end.first, end.second);
+                    openSet.push({fScore[ny][nx], tentative_g, nx, ny});
                 }
             }
         }
     }
 
-    std::vector<std::pair<int, int>> path;
-    for (AStarNode* cur = endNode; cur != nullptr; cur = cur->parent) {
-        path.push_back({cur->x, cur->y});
+    if (!found) {
+        return {};
     }
-    std::reverse(path.begin(), path.end());
 
-    for (int y = 0; y < rows; ++y) {
-        for (int x = 0; x < cols; ++x) {
-            delete nodes[y][x];
+    std::vector<std::pair<int, int>> path;
+    auto cur = end;
+
+    while (cur != start) {
+        path.push_back(cur);
+        cur = parent[cur.second][cur.first];
+        if (cur.first == -1 && cur.second == -1) {
+            return {};
         }
     }
 
+    path.push_back(start);
+    std::reverse(path.begin(), path.end());
     return path;
+}
+
+// Только реализации name() для BFSFinder и AStarFinder
+// DFSGenerator::name() и KruskalGenerator::name() уже есть в mazegenerator.cpp
+QString BFSFinder::name() const {
+    return "BFS (Поиск в ширину)";
+}
+
+QString AStarFinder::name() const {
+    return "A* (Звездочка)";
 }

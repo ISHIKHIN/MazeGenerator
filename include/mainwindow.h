@@ -19,22 +19,22 @@
 class MazeWidget;
 
 class MainWindow : public QMainWindow {
-    Q_OBJECT
+    Q_OBJECT  // Важно! Этот макрос необходим для Qt
 
 public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 
-protected:
-    void resizeEvent(QResizeEvent *event) override;
-
-private slots:
+    // Публичные методы для тестирования
     void generateMaze();
     void findPath();
     void clearPath();
     void updateSizeByDifficulty();
     void onMazeGenerated();
     void adjustMazeSize();
+
+protected:
+    void resizeEvent(QResizeEvent *event) override;
 
 private:
     void setupUI();
